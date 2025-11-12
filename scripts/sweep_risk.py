@@ -15,7 +15,6 @@ import time
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from rlmarketmaker.env.realistic_market_env import RealisticMarketMakerEnv
-from rlmarketmaker.data.feeds import PolygonReplayFeed
 from rlmarketmaker.utils.config import load_config
 from rlmarketmaker.agents.min_ppo import MinPPO, RolloutBuffer
 
@@ -29,6 +28,18 @@ def set_seeds(seed: int):
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+
+
+def build_feed(env_config: Dict[str, Any], seed: int):
+    feed_type = env_config.get('feed_type', 'SyntheticFeed')
+    if feed_type == 'PolygonReplayFeed':
+        from rlmarketmaker.data.feeds import PolygonReplayFeed
+        return PolygonReplayFeed(seed=seed)
+    if feed_type == 'TardisReplayFeed':
+        from rlmarketmaker.data.tardis import TardisReplayFeed
+        return TardisReplayFeed(data_path=env_config.get('data_path'), seed=seed)
+    from rlmarketmaker.data.feeds import SyntheticFeed
+    return SyntheticFeed(seed=seed)
 
 
 class RecordEpisodeStats:
@@ -112,6 +123,9 @@ def train_sweep_run(lambda_val: float, H_val: int, seed: int, config: Dict[str, 
     # Update config with sweep parameters
     config['lambda_inventory'] = lambda_val
     config['position_limit_threshold'] = H_val
+    if 'env' in config:
+        config['env']['lambda_inventory'] = lambda_val
+        config['env']['position_limit_threshold'] = H_val
     
     # Create directories
     log_dir = Path(config.get('log_dir', 'logs'))
@@ -119,8 +133,9 @@ def train_sweep_run(lambda_val: float, H_val: int, seed: int, config: Dict[str, 
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     
     # Create environment
-    feed = PolygonReplayFeed(seed=seed)
-    env = RealisticMarketMakerEnv(feed, config, seed=seed)
+    env_config = config.get('env', config)
+    feed = build_feed(env_config, seed)
+    env = RealisticMarketMakerEnv(feed, env_config, seed=seed)
     env = RecordEpisodeStats(env)
     
     # Get environment dimensions

@@ -139,6 +139,11 @@ def train_minimal_ppo(config_path: str, seed: int = 42):
         from rlmarketmaker.data.feeds import PolygonReplayFeed
         feed = PolygonReplayFeed(seed=seed)
         print("Created PolygonReplayFeed for historical data training")
+    elif feed_type == 'TardisReplayFeed':
+        from rlmarketmaker.data.tardis import TardisReplayFeed
+        data_path = env_config.get('data_path')
+        feed = TardisReplayFeed(data_path=data_path, seed=seed)
+        print(f"Created TardisReplayFeed (data_path={data_path})")
     else:
         feed = SyntheticFeed(seed=seed)
         print("Created SyntheticFeed for synthetic data training")

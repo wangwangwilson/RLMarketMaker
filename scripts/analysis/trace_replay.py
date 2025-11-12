@@ -13,9 +13,19 @@ from typing import Dict, Any, List
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from rlmarketmaker.env.replay_market_env import ReplayMarketMakerEnv
-from rlmarketmaker.data.feeds import PolygonReplayFeed
 from rlmarketmaker.utils.config import load_config
 from rlmarketmaker.agents.min_ppo import MinPPO
+
+
+def _build_feed(env_cfg: Dict[str, Any], seed: int):
+    feed_type = env_cfg.get('feed_type', 'PolygonReplayFeed')
+    if feed_type == 'PolygonReplayFeed':
+        from rlmarketmaker.data.feeds import PolygonReplayFeed
+        return PolygonReplayFeed(seed=seed)
+    if feed_type == 'TardisReplayFeed':
+        from rlmarketmaker.data.tardis import TardisReplayFeed
+        return TardisReplayFeed(data_path=env_cfg.get('data_path'), seed=seed)
+    raise ValueError(f"Unsupported feed_type: {feed_type}")
 
 
 def trace_ppo_replay(checkpoint_path: str, config_path: str, steps: int, seed: int):
@@ -26,7 +36,7 @@ def trace_ppo_replay(checkpoint_path: str, config_path: str, steps: int, seed: i
     config = load_config(config_path)
     
     # Create environment
-    feed = PolygonReplayFeed(seed=seed)
+    feed = _build_feed(config['env'], seed)
     env = ReplayMarketMakerEnv(feed, config['env'], seed=seed)
     
     # Get environment dimensions

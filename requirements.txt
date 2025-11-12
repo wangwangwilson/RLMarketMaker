@@ -9,6 +9,8 @@ gymnasium==0.29.1
 # Data handling
 pandas==2.0.3
 pyyaml==6.0.1
+tardis-dev==2.1.2
+pyarrow==22.0.0
 
 # Utilities
 tqdm==4.66.1

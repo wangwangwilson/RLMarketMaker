@@ -19,7 +19,6 @@ import json
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from rlmarketmaker.env.replay_market_env import ReplayMarketMakerEnv
-from rlmarketmaker.data.feeds import PolygonReplayFeed
 from rlmarketmaker.utils.config import load_config
 from rlmarketmaker.agents.min_ppo import MinPPO
 from rlmarketmaker.agents.baselines import (
@@ -90,6 +89,17 @@ def evaluate_agent_replay(agent, env: ReplayMarketMakerEnv, episodes: int = 10) 
     return metrics.calculate_summary_metrics()
 
 
+def _build_feed(env_cfg: Dict[str, Any], seed: int):
+    feed_type = env_cfg.get('feed_type', 'PolygonReplayFeed')
+    if feed_type == 'PolygonReplayFeed':
+        from rlmarketmaker.data.feeds import PolygonReplayFeed
+        return PolygonReplayFeed(seed=seed)
+    if feed_type == 'TardisReplayFeed':
+        from rlmarketmaker.data.tardis import TardisReplayFeed
+        return TardisReplayFeed(data_path=env_cfg.get('data_path'), seed=seed)
+    raise ValueError(f"Unsupported feed_type: {feed_type}")
+
+
 def evaluate_ppo_replay(checkpoint_path: str, config_path: str, episodes: int = 10) -> Dict[str, float]:
     """Evaluate PPO agent on replay data."""
     print(f"Evaluating PPO agent from {checkpoint_path}...")
@@ -98,7 +108,7 @@ def evaluate_ppo_replay(checkpoint_path: str, config_path: str, episodes: int = 
     config = load_config(config_path)
     
     # Create environment
-    feed = PolygonReplayFeed(seed=42)
+    feed = _build_feed(config['env'], seed=42)
     env = ReplayMarketMakerEnv(feed, config['env'], seed=42)
     
     # Get environment dimensions
@@ -139,7 +149,7 @@ def evaluate_baseline_replay(baseline_name: str, config_path: str, episodes: int
     config = load_config(config_path)
     
     # Create environment
-    feed = PolygonReplayFeed(seed=42)
+    feed = _build_feed(config['env'], seed=42)
     env = ReplayMarketMakerEnv(feed, config['env'], seed=42)
     
     # Create baseline agent
