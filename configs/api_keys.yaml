@@ -10,3 +10,15 @@ data:
   timeframe: "1min"
   days_back: 30
   output_dir: "data/polygon"
+
+# Tardis Configuration
+tardis:
+  api_key: "TD.sDyJS7YZ6oPWSgy2.-vZySO46Lv8avKO.ixQvOq9xdhxqnzC.p1rlPahcqt4F3pp.uORrUOeq0hqYOhV.w6s4"
+  base_url: "https://api.tardis.dev/v1"
+  download_timeout: 300
+  max_concurrent_downloads: 3
+  # Crypto data configuration
+  exchanges: ["binance", "coinbase", "kraken"]
+  symbols: ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+  data_types: ["trades", "book_snapshot_5"]
+  output_dir: "data/tardis"
