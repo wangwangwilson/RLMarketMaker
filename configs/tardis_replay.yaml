@@ -1,0 +1,40 @@
+# Tardis Crypto Market Replay Configuration
+
+env:
+  # Environment parameters
+  episode_length: 1000  # Shorter episodes for crypto (higher frequency)
+  max_inventory: 10.0   # Smaller inventory for crypto
+  tick_size: 0.01
+  fee_bps: 2.0          # Crypto exchanges typically have higher fees
+  latency_ticks: 1
+  
+  # Fill model parameters (adjusted for crypto)
+  fill_alpha: 0.85
+  fill_beta: 0.4
+  
+  # Domain randomization (narrower range for crypto)
+  volatility_multiplier: [0.9, 1.1]
+  spread_multiplier: [0.8, 1.2]
+
+feed:
+  # Data feed configuration
+  data_path: "data/replay/binance_BTCUSDT_replay.parquet"
+  episode_length: 1000
+  warmup_steps: 50
+
+# PPO training configuration (adjusted for crypto)
+ppo:
+  learning_rate: 0.0001
+  n_steps: 1024
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_range: 0.2
+  ent_coef: 0.008        # Higher entropy for exploration in crypto
+  vf_coef: 0.5
+  max_grad_norm: 0.5
+  hidden_size: 256
+  eval_freq: 50
+  eval_episodes: 5
+  save_freq: 10000
